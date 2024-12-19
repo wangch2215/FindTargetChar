@@ -19,6 +19,7 @@ star_match_count = 3  # 預設值
 target_match_count = 1  # 預設值
 save_star_screenshot = True  # 預設值
 save_target_screenshot = False  # 預設值
+delay_time = 1.0 # 預設值
 
 width = 3840
 
@@ -56,7 +57,8 @@ def load_config():
             "star_count": config.getint('Settings', 'star_count', fallback=3),
             "target_count": config.getint('Settings', 'target_count', fallback=1),
             "save_star_screenshot": config.getboolean('Settings', 'save_star_screenshot', fallback=True),
-            "save_target_screenshot": config.getboolean('Settings', 'save_target_screenshot', fallback=True)
+            "save_target_screenshot": config.getboolean('Settings', 'save_target_screenshot', fallback=True),
+            "delay_time": config.getfloat('Settings', 'delay_time', fallback=1.0)
         }
     except Exception as e:
         print(f"讀取設定檔時發生錯誤：{e}，將使用預設值")
@@ -64,7 +66,8 @@ def load_config():
             "star_count": 3,
             "target_count": 1,
             "save_star_screenshot": True,
-            "save_target_screenshot": True
+            "save_target_screenshot": True,
+            "delay_time": 1.0
         }
 
 def load_image(image_path):
@@ -134,14 +137,7 @@ def btn_matching(screenshot, template):
     points = []
     for pt in zip(*loc[::-1]):
         points.append((pt[0] + w // 2, pt[1] + h // 2))
-
     return points
-
-def capture_screenshot():
-    screenshot = pyautogui.screenshot()
-    screenshot = np.array(screenshot)
-    screenshot = cv2.cvtColor(screenshot, cv2.COLOR_RGB2BGR)
-    return screenshot
 
 def check_star_count(screenshot, template):
     if star_match_count == 0:
@@ -153,7 +149,7 @@ def check_star_count(screenshot, template):
         star_count = len(points)
         if star_count >= star_match_count:
             print(f"已找到 {star_count} 個5星角色，已滿足條件({star_match_count}以上)")
-            if save_target_screenshot:
+            if save_star_screenshot:
                 save_screenshot()
             return True
     return False
@@ -168,31 +164,44 @@ def check_templates(screenshot, templates):
             print(f"找到角色圖片，共找到 {count} 個角色匹配點")
         if match_count >= target_match_count:
             print(f"已找到至少 {target_match_count} 張角色圖片")
-            if save_star_screenshot:
+            if save_target_screenshot:
                 save_screenshot()
             return True
     if match_count == 0:
         print("未找到任何匹配角色圖片")
     return False
 
+def capture_screenshot(save_to_file=False):
+    """擷取螢幕畫面，可選擇是否儲存檔案
+    Args:
+        save_to_file (bool): 是否儲存為檔案
+    Returns:
+        np.array: 螢幕截圖的numpy陣列
+    """
+    screenshot = pyautogui.screenshot()
+    screenshot = cv2.cvtColor(np.array(screenshot), cv2.COLOR_RGB2BGR)
+    
+    if save_to_file:
+        # 確保 screenshots 資料夾存在
+        screenshots_dir = os.path.join(os.getcwd(), "screenshots")
+        os.makedirs(screenshots_dir, exist_ok=True)
+
+        # 使用時間戳命名並儲存截圖
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = os.path.join(screenshots_dir, f"screenshot_{timestamp}.png")
+        cv2.imwrite(filename, screenshot)
+        print(f"已截圖，已存放在目錄: {filename}")
+    
+    return screenshot
+
+# 為了向後相容，可以保留save_screenshot函數
 def save_screenshot():
-    # 擷取目前螢幕畫面
-    img = take_screenshot()
-    img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-
-    # 確保 screenshots 資料夾存在
-    screenshots_dir = os.path.join(os.getcwd(), "screenshots")
-    os.makedirs(screenshots_dir, exist_ok=True)
-
-    # 使用時間戳命名並儲存截圖
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = os.path.join(screenshots_dir, f"screenshot_{timestamp}.png")
-    cv2.imwrite(filename, img)
-    print(f"已截圖，已存放在目錄: {filename}")
+    capture_screenshot(save_to_file=True)
 
 
 def process_buttons_and_templates(iteration, retry_template, retry_confirm_template, skip_template, star_template, templates):
     global stop_script
+    global delay_time
 
     screenshot = capture_screenshot()
 
@@ -203,7 +212,7 @@ def process_buttons_and_templates(iteration, retry_template, retry_confirm_templ
 
     pyautogui.click(retry_points[0])
     print("已點擊retry按鈕")
-    time.sleep(1)  # 根據電腦效能修改,建議為 1~2秒
+    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
 
     screenshot = capture_screenshot()
     retry_confirm_points = btn_matching(screenshot, retry_confirm_template)
@@ -213,7 +222,7 @@ def process_buttons_and_templates(iteration, retry_template, retry_confirm_templ
 
     pyautogui.click(retry_confirm_points[0])
     print("已點擊retry confirm按鈕")
-    time.sleep(1)  # 根據電腦效能修改,建議為 1~2秒
+    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
 
     screenshot = capture_screenshot()
     skip_points = btn_matching(screenshot, skip_template)
@@ -223,7 +232,7 @@ def process_buttons_and_templates(iteration, retry_template, retry_confirm_templ
 
     pyautogui.click(skip_points[0])
     print("已點擊skip按鈕")
-    time.sleep(1)  # 根據電腦效能修改,建議為 1~2秒
+    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
 
     screenshot = capture_screenshot()
     if check_star_count(screenshot, star_template):
@@ -269,6 +278,7 @@ def main():
         target_match_count = config.get('target_count', 1)
         save_star_screenshot = config.get('save_star_screenshot', True)
         save_target_screenshot = config.get('save_target_screenshot', True)
+        delay_time = config.get('delay_time', 1)
 
         print(f"""
 設定資訊：
@@ -276,6 +286,7 @@ def main():
 - 目標匹配數量: {target_match_count}
 - 5星數量達標時截圖: {save_star_screenshot}
 - 目標匹配達標時截圖: {save_target_screenshot}
+- 延遲時間: {delay_time}
 """)
 
         template_count = get_template_count()

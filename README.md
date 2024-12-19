@@ -32,8 +32,9 @@
 |---------|------|--------|--------|
 | star_count | 需要的五星角色數量 | 3 | 任意正整數 |
 | target_count | 需要匹配的目標角色數量 | 1 | 任意正整數 |
-| save_star_screenshot | 當達到五星數量條件時是否截圖 | true | true/false |
+| save_star_screenshot | 當達到五星數量條件時是否截圖 | false | true/false |
 | save_target_screenshot | 當達到目標角色數量條件時是否截圖 | true | true/false |
+| delay_time | 按鈕點擊之間的延遲時間 | 1.0 | 建議設置1.0 ~ 2.0秒 |
 
 ### 設定檔預設範例
 ```ini
@@ -43,9 +44,11 @@ star_count = 3
 # 需要幾個目標角色 (預設：1)
 target_count = 1
 # 是否在找到五星時截圖
-save_star_screenshot = true
+save_star_screenshot = false
 # 是否在找到目標角色時截圖
 save_target_screenshot = true
+# 按鈕點擊之間的延遲時間
+delay_time = 1.0
 ```
 在此預設值中，腳本會在達到3(含以上)個五星角色後，繼續檢查模板中是否存在1(含以上)個指定的角色模板。
 請自行調整設定檔，以符合您的需求。
@@ -73,12 +76,11 @@ save_target_screenshot = true
 - `pyautogui`
 - `keyboard`
 - `pillow`
-- `pyautogui`
 
 您可以使用以下命令來安裝這些庫：
 
 ```
-pip install opencv-python numpy pyautogui keyboard pillow pyautogui
+pip install opencv-python numpy pyautogui keyboard pillow
 ```
 ## 運行腳本
 在包含上述文件的目錄中打開命令提示符或終端。輸入以下命令來運行腳本：
