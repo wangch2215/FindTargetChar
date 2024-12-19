@@ -25,7 +25,7 @@
 
 ## 設定檔說明
 
-在根目錄中的 `config.json` 可以自訂腳本的運行設定：
+在根目錄中的 `config.ini` 可以自訂腳本的運行設定：
 (點擊右鍵以記事本開啟，即可編輯)
 
 | 設定項目 | 說明 | 預設值 | 可選值 |
@@ -36,13 +36,16 @@
 | save_target_screenshot | 當達到目標角色數量條件時是否截圖 | true | true/false |
 
 ### 設定檔預設範例
-```json
-{
-    "star_count": 3,
-    "target_count": 1,
-    "save_star_screenshot": true,
-    "save_target_screenshot": true
-}
+```ini
+[Settings]
+# 需要幾個五星角色 (預設：3)
+star_count = 3
+# 需要幾個目標角色 (預設：1)
+target_count = 1
+# 是否在找到五星時截圖
+save_star_screenshot = true
+# 是否在找到目標角色時截圖
+save_target_screenshot = true
 ```
 在此預設值中，腳本會在達到3(含以上)個五星角色後，繼續檢查模板中是否存在1(含以上)個指定的角色模板。
 請自行調整設定檔，以符合您的需求。

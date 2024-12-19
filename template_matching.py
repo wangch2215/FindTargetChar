@@ -10,7 +10,6 @@ import os
 from datetime import datetime
 from pyautogui import screenshot as take_screenshot
 import ctypes
-import json
 
 # 用來停止腳本的標誌
 stop_script = False
@@ -49,16 +48,24 @@ def resource_path(relative_path):
 
 def load_config():
     try:
-        with open('config.json', 'r', encoding='utf-8') as f:
-            config = json.load(f)
-            print(f"已從config.json載入設定")
-            return config
-    except FileNotFoundError:
-        print("找不到config.json檔案，將使用預設值")
-        return {"target_count": 1}  # 預設值
-    except json.JSONDecodeError:
-        print("config.json格式錯誤，將使用預設值")
-        return {"target_count": 1}  # 預設值
+        import configparser
+        config = configparser.ConfigParser()
+        config.read('config.ini', encoding='utf-8')
+        
+        return {
+            "star_count": config.getint('Settings', 'star_count', fallback=3),
+            "target_count": config.getint('Settings', 'target_count', fallback=1),
+            "save_star_screenshot": config.getboolean('Settings', 'save_star_screenshot', fallback=True),
+            "save_target_screenshot": config.getboolean('Settings', 'save_target_screenshot', fallback=True)
+        }
+    except Exception as e:
+        print(f"讀取設定檔時發生錯誤：{e}，將使用預設值")
+        return {
+            "star_count": 3,
+            "target_count": 1,
+            "save_star_screenshot": True,
+            "save_target_screenshot": True
+        }
 
 def load_image(image_path):
     absolute_path = resource_path(image_path)
