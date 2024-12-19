@@ -1,6 +1,6 @@
 {
-    "star_count": 3,
+    "star_count": 1,
     "target_count": 1,
-    "save_star_screenshoth": true,
-    "save_target_screenshot": true
+    "save_star_screenshot": false,
+    "save_target_screenshot": false
 }

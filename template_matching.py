@@ -21,6 +21,8 @@ target_match_count = 1  # 預設值
 save_star_screenshot = True  # 預設值
 save_target_screenshot = False  # 預設值
 
+width = 3840
+
 def get_screen_width():
     """獲取螢幕寬度解析度"""
     user32 = ctypes.windll.user32
@@ -29,9 +31,10 @@ def get_screen_width():
     return screen_width
 
 def get_btn_folder():
+    global width
     """根據解析度選擇正確的資料夾"""
-    screen_width = get_screen_width()
-    folder = (f"btns/{screen_width}")
+    width = get_screen_width()
+    folder = (f"btns/{width}")
     print(f"選擇的資料夾：{folder}")
     return folder
 
@@ -82,6 +85,35 @@ def template_matching(screenshot, template, threshold=0.8, min_distance=20):
 
     return final_points
 
+def star_matching(screenshot, template, min_distance=20):
+    global width
+
+    if width > 1920:
+        threshold = 0.8
+    else:
+        threshold = 0.78
+
+    screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
+    template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+    w, h = template_gray.shape[::-1]
+
+    # 使用較低的threshold進行匹配
+    result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+    loc = np.where(result >= threshold)
+
+    # 收集所有匹配點
+    points = []
+    for pt in zip(*loc[::-1]):
+        points.append([pt[0], pt[1], w, h])
+
+    # 使用groupRectangles來合併重複的檢測結果
+    rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
+    
+    # 計算中心點
+    final_points = [(int(x + w/2), int(y + h/2)) for x, y, w, h in rects]
+
+    return final_points
+
 def btn_matching(screenshot, template):
     screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
@@ -105,8 +137,11 @@ def capture_screenshot():
     return screenshot
 
 def check_star_count(screenshot, template):
+    if star_match_count == 0:
+        return True
+    
     star_count = 0
-    points = template_matching(screenshot, template)
+    points = star_matching(screenshot, template)
     if points:
         star_count = len(points)
         if star_count >= star_match_count:
@@ -226,14 +261,14 @@ def main():
         star_match_count = config.get('star_count', 3)
         target_match_count = config.get('target_count', 1)
         save_star_screenshot = config.get('save_star_screenshot', True)
-        save_target_screenshot = config.get('save_target_screenshot', False)
+        save_target_screenshot = config.get('save_target_screenshot', True)
 
         print(f"""
 設定資訊：
-- 5 星數量目標: {config.get('star_count', 3)}
+- 5 星數量目標: {star_match_count}
 - 目標匹配數量: {target_match_count}
-- 5星數量達標時截圖: {config.get('save_target_screenshot', False)}
-- 目標匹配達標時截圖: {config.get('save_star_screenshot', True)}
+- 5星數量達標時截圖: {save_star_screenshot}
+- 目標匹配達標時截圖: {save_target_screenshot}
 """)
 
         template_count = get_template_count()
