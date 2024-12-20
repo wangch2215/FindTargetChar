@@ -284,6 +284,11 @@ def get_template_count():
     files = [f for f in os.listdir(templates_dir) if os.path.isfile(os.path.join(templates_dir, f))]
     return len(files)
 
+def rewrite_log(iteration, found):
+    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open('log.txt', 'w') as f:
+        f.write(f"運行次數: {iteration}\n是否符合條件: {found}\n紀錄時間: {date}\n")
+
 def main():
     global stop_script, start_script
     global star_match_count, target_match_count
@@ -337,6 +342,7 @@ def main():
                 iteration += 1
                 print(f"運行次數 {iteration}")
                 found = process_buttons_and_templates(retry_template, retry_confirm_template, skip_template, star_template, templates)
+                rewrite_log(iteration, found)
                 if found or stop_script:
                     start_script = False
                     stop_script = True
