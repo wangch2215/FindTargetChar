@@ -79,16 +79,7 @@ def load_image(image_path):
         print(f"已載入圖片：{image_path}")
     return image
 
-def template_matching(screenshot, template, threshold=0.8, use_rect=True):
-    """判斷螢幕截圖上是有與範例圖片匹配的點
-    Args:
-        screenshot (np.array): 螢幕截圖的numpy陣列
-        template (np.array): 範例圖片
-        threshold (float): 匹配閾值
-        use_rect (bool): 是否使用矩形框(按鈕情況不使用)
-    Returns:
-        np.array: 匹配點的座標
-    """
+def template_matching(screenshot, template, threshold=0.8, min_distance=20):
     screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 
@@ -96,29 +87,47 @@ def template_matching(screenshot, template, threshold=0.8, use_rect=True):
     loc = np.where(result >= threshold)
 
     points = []
-    if use_rect:
-        for pt in zip(*loc[::-1]):
-            points.append([pt[0], pt[1], template.shape[1], template.shape[0]])
-        rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
-        final_points = [(int(x + w / 2), int(y + h / 2)) for x, y, w, h in rects]
-    else:
-        final_points = [(int(x), int(y)) for x, y in zip(*loc[::-1])]
+    for pt in zip(*loc[::-1]):
+        points.append([pt[0], pt[1], template.shape[1], template.shape[0]])
+    rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
+    final_points = [(int(x + w / 2), int(y + h / 2)) for x, y, w, h in rects]
 
     return final_points
 
-def star_matching(screenshot, template):
-    """5星抓點"""
+def star_matching(screenshot, template, min_distance=20):
     global width
     if width > 1920:
         threshold = 0.8
     else:
         threshold = 0.78
-    points = template_matching(screenshot, template, threshold, True)
-    return points
+    screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
+    template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+    w, h = template_gray.shape[::-1]
+    # 使用較低的threshold進行匹配
+    result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+    loc = np.where(result >= threshold)
+    # 收集所有匹配點
+    points = []
+    for pt in zip(*loc[::-1]):
+        points.append([pt[0], pt[1], w, h])
+    # 使用groupRectangles來合併重複的檢測結果
+    rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
+    
+    # 計算中心點
+    final_points = [(int(x + w/2), int(y + h/2)) for x, y, w, h in rects]
+    return final_points
 
 def btn_matching(screenshot, template):
-    """按鈕抓點"""
-    points = template_matching(screenshot, template, 0.6, False)
+    screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
+    template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+    w, h = template_gray.shape[::-1]
+    result = cv2.matchTemplate(
+        screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
+    threshold = 0.6
+    loc = np.where(result >= threshold)
+    points = []
+    for pt in zip(*loc[::-1]):
+        points.append((pt[0] + w // 2, pt[1] + h // 2))
     return points
 
 def check_star_count(screenshot, template):
