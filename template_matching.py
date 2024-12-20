@@ -286,7 +286,7 @@ def get_template_count():
 
 def rewrite_log(iteration, found):
     date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open('log.txt', 'w') as f:
+    with open('log.txt', 'w', encoding='utf-8') as f:
         f.write(f"運行次數: {iteration}\n是否符合條件: {found}\n紀錄時間: {date}\n")
 
 def main():
