@@ -79,68 +79,79 @@ def load_image(image_path):
         print(f"已載入圖片：{image_path}")
     return image
 
-def template_matching(screenshot, template, threshold=0.8, min_distance=20):
+def template_matching(screenshot, template, threshold=0.8, use_rect=True):
+    """
+    統一的模板匹配函式
+
+    參數:
+        screenshot: 螢幕截圖影像 (BGR 格式)
+        template: 模板影像 (BGR 格式)
+        threshold: 匹配的門檻值
+        use_rect: 是否合併重疊區域 (True 使用 groupRectangles, False 直接回傳匹配點)
+
+    回傳:
+        final_points: 匹配點的中心座標列表
+    """
+
     screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
     template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
 
     result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
     loc = np.where(result >= threshold)
 
+    w, h = template_gray.shape[::-1]
+
     points = []
-    for pt in zip(*loc[::-1]):
-        points.append([pt[0], pt[1], template.shape[1], template.shape[0]])
+    if use_rect:
+        for pt in zip(*loc[::-1]):
+            points.append([pt[0], pt[1], w, h])
 
-    rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
-    final_points = [(int(x + w / 2), int(y + h / 2)) for x, y, w, h in rects]
+        rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
+        final_points = [(int(x + w / 2), int(y + h / 2)) for x, y, w, h in rects]
 
-    return final_points
-
-def star_matching(screenshot, template, min_distance=20):
+        return final_points
+    else:
+        for pt in zip(*loc[::-1]):
+            points.append((pt[0] + w // 2, pt[1] + h // 2))
+        return points
+    
+def star_matching(screenshot, template):
+    """5星角色匹配
+    Args:
+        screenshot: 螢幕截圖影像 (BGR 格式)
+        template: 5星角色範例圖片
+    Returns:
+        list: 匹配點的中心座標列表
+    """
     global width
-
     if width > 1920:
         threshold = 0.8
     else:
         threshold = 0.78
-
-    screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
-    template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-    w, h = template_gray.shape[::-1]
-
-    # 使用較低的threshold進行匹配
-    result = cv2.matchTemplate(screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
-    loc = np.where(result >= threshold)
-
-    # 收集所有匹配點
-    points = []
-    for pt in zip(*loc[::-1]):
-        points.append([pt[0], pt[1], w, h])
-
-    # 使用groupRectangles來合併重複的檢測結果
-    rects, _ = cv2.groupRectangles(points, groupThreshold=1, eps=0.5)
-    
-    # 計算中心點
-    final_points = [(int(x + w/2), int(y + h/2)) for x, y, w, h in rects]
-
-    return final_points
+    return template_matching(screenshot, template, threshold, True)
 
 def btn_matching(screenshot, template):
-    screenshot_gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
-    template_gray = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
-    w, h = template_gray.shape[::-1]
-
-    result = cv2.matchTemplate(
-        screenshot_gray, template_gray, cv2.TM_CCOEFF_NORMED)
-    threshold = 0.6
-    loc = np.where(result >= threshold)
-
-    points = []
-    for pt in zip(*loc[::-1]):
-        points.append((pt[0] + w // 2, pt[1] + h // 2))
-    return points
+    """按鈕匹配
+    Args:
+        screenshot: 螢幕截圖影像 (BGR 格式)
+        template: 按鈕範例圖片
+    Returns:
+        list: 匹配點的中心座標列表
+    """
+    return template_matching(screenshot, template, 0.6, False)
 
 def check_star_count(screenshot, template):
+    """檢查是否找到足夠的5星角色
+    Args:
+        screenshot: 螢幕截圖影像 (BGR 格式)
+        template: 5星角色範例圖片
+    Returns:
+        bool: 是否找到足夠的角色圖片
+    """
     if star_match_count == 0:
+        print(f"未設置5星數量目標，直接進行目標匹配")
+        if save_star_screenshot:
+            save_screenshot()
         return True
     
     star_count = 0
@@ -160,6 +171,19 @@ def check_star_count(screenshot, template):
         return False
 
 def check_templates(screenshot, templates):
+    """檢查是否找到足夠的角色圖片
+    Args:
+        screenshot: 螢幕截圖影像 (BGR 格式)
+        templates: 角色圖片列表
+    Returns:
+        bool: 是否找到足夠的角色圖片
+    """
+    if target_match_count == 0:
+        print(f"未設置目標匹配數量，已滿足條件")
+        if save_target_screenshot:
+            save_screenshot()
+        return True
+    
     match_count = 0
     for template in templates:
         points = template_matching(screenshot, template)
@@ -204,40 +228,31 @@ def save_screenshot():
     capture_screenshot(save_to_file=True)
 
 
-def process_buttons_and_templates(iteration, retry_template, retry_confirm_template, skip_template, star_template, templates):
+def click_buttons( retry_template, retry_confirm_template, skip_template):
+    """點擊按鈕操作
+    Args:
+        retry_template: 重試按鈕範例圖片
+        retry_confirm_template: 重試確認按鈕範例圖片
+        skip_template: 跳過按鈕範例圖片
+    Returns:
+        bool: 是否成功點擊按鈕
+    """
+    global delay_time
+    for btn, btn_name in [(retry_template, "retry"), (retry_confirm_template, "retry_confirm"), (skip_template, "skip")]:
+        screenshot = capture_screenshot()
+        points = btn_matching(screenshot, btn)
+        if not points:
+            print(f"未找到{btn_name}按鈕")
+            return False
+        pyautogui.click(points[0])
+        print(f"已點擊{btn_name}按鈕")
+        time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
+
+def process_buttons_and_templates(retry_template, retry_confirm_template, skip_template, star_template, templates):
     global stop_script
     global delay_time
 
-    screenshot = capture_screenshot()
-
-    retry_points = btn_matching(screenshot, retry_template)
-    if not retry_points:
-        print("未找到Retry按鈕")
-        return False
-
-    pyautogui.click(retry_points[0])
-    print("已點擊retry按鈕")
-    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
-
-    screenshot = capture_screenshot()
-    retry_confirm_points = btn_matching(screenshot, retry_confirm_template)
-    if not retry_confirm_points:
-        print("未找到Retry confirm按鈕")
-        return False
-
-    pyautogui.click(retry_confirm_points[0])
-    print("已點擊retry confirm按鈕")
-    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
-
-    screenshot = capture_screenshot()
-    skip_points = btn_matching(screenshot, skip_template)
-    if not skip_points:
-        print("未找到Skip按鈕")
-        return False
-
-    pyautogui.click(skip_points[0])
-    print("已點擊skip按鈕")
-    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
+    click_buttons(retry_template, retry_confirm_template, skip_template)
 
     screenshot = capture_screenshot()
     if check_star_count(screenshot, star_template):
@@ -321,8 +336,7 @@ def main():
             while start_script:
                 iteration += 1
                 print(f"運行次數 {iteration}")
-                found = process_buttons_and_templates(
-                    iteration, retry_template, retry_confirm_template, skip_template, star_template, templates)
+                found = process_buttons_and_templates(retry_template, retry_confirm_template, skip_template, star_template, templates)
                 if found or stop_script:
                     start_script = False
                     stop_script = True
