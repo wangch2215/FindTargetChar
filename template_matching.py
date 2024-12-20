@@ -215,17 +215,19 @@ def check_else_skip(retry_template, retry_confirm_template, skip_template):
         print("已點擊Skip按鈕")
         time.sleep(delay_time) # 根據電腦效能修改,建議為 1~2秒
 
-        click_btns(retry_template, retry_confirm_template, skip_template) #進新的循環
-
+        return click_btns(retry_template, retry_confirm_template, skip_template) #進新的循環
     else:
         print("當前畫面已無額外的Skip按鈕，開始執行匹配判斷...")
+        return True # 返回True表示已經開始進入匹配判斷
 
 def process_buttons_and_templates(iteration, retry_template, retry_confirm_template, skip_template, star_template, templates):
     """處理按鈕點擊和範例圖片匹配判斷"""
     global stop_script
     global delay_time
 
-    click_btns(retry_template, retry_confirm_template, skip_template)
+    if not click_btns(retry_template, retry_confirm_template, skip_template):
+        print("按鈕點擊失敗，跳過本次判斷...")
+        return False
 
     screenshot = capture_screenshot()
     # 判斷是否滿足星數條件
