@@ -203,7 +203,7 @@ def click_btns(retry_template, retry_confirm_template, skip_template):
             print(f"未找到 {desc} 按鈕")
             return False
         
-    check_else_skip(retry_template, retry_confirm_template, skip_template)
+    return check_else_skip(retry_template, retry_confirm_template, skip_template)
         
     
 def check_else_skip(retry_template, retry_confirm_template, skip_template):
