@@ -285,9 +285,13 @@ def get_template_count():
     return len(files)
 
 def rewrite_log(iteration, found):
-    date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open('log.txt', 'w', encoding='utf-8') as f:
-        f.write(f"運行次數: {iteration}\n是否符合條件: {found}\n紀錄時間: {date}\n")
+    try:
+        date = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        with open('log.txt', 'w', encoding='utf-8') as f:
+            f.write(f"運行次數: {iteration}\n是否符合條件: {found}\n紀錄時間: {date}\n")
+    except Exception as e:
+        print(f"寫入記錄檔時發生錯誤: {e}")
+        print("繼續執行腳本...")
 
 def main():
     global stop_script, start_script
