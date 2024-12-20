@@ -59,7 +59,7 @@ delay_time = 1.0
 ## 使用
 
 ![示例圖片](screenshot.png)
-- 運行腳本。
+- 在此抽卡畫面下運行腳本。
 - 等待腳本載入設定檔及圖片資訊。
 - 鍵盤F9 開啟 / 停止腳本。
 
@@ -82,11 +82,9 @@ delay_time = 1.0
 ```
 pip install opencv-python numpy pyautogui keyboard pillow
 ```
+
 ## 運行腳本
-在包含上述文件的目錄中打開命令提示符或終端。輸入以下命令來運行腳本：
-```
-python template_matching.py
-```
+執行`start.bat`檔案啟動腳本。
 
 ## 腳本邏輯 
 1. 等待腳本載入設定檔及圖片資訊後，按下F9開始運行
