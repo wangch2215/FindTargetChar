@@ -325,13 +325,13 @@ def main():
         else:
             print(f"範例圖片數量自動設定為: {template_count}")
 
-        btn_folder = get_btn_folder()
+        folder = get_btn_folder()
 
-        retry_template = load_image(f'{btn_folder}/retry.png')
-        retry_confirm_template = load_image(f'{btn_folder}/retry_confirm.png')
-        skip_template = load_image(f'{btn_folder}/skip.png')
+        retry_template = load_image(f'{folder}/retry.png')
+        retry_confirm_template = load_image(f'{folder}/retry_confirm.png')
+        skip_template = load_image(f'{folder}/skip.png')
 
-        star_template = load_image(f'{btn_folder}/5star.png')
+        star_template = load_image(f'{folder}/5star.png')
 
         templates = [load_image(f'templates/t{i + 1}.png') for i in range(template_count)]
         print("範例圖片載入完成，請於遊戲抽卡畫面按下 F9 開始運行腳本")
