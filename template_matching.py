@@ -202,23 +202,7 @@ def click_btns(retry_template, retry_confirm_template, skip_template):
         else:
             print(f"未找到 {desc} 按鈕")
             return False
-        
-    return check_else_skip(retry_template, retry_confirm_template, skip_template)
-        
-    
-def check_else_skip(retry_template, retry_confirm_template, skip_template):
-    """判斷當前畫面是否還有額外的Skip按鈕，有的話點擊該按鈕，並進入新的按鈕循環"""
-    screenshot = capture_screenshot()
-    points = btn_matching(screenshot, skip_template)
-    if points:
-        pyautogui.click(points[0])
-        print("已點擊Skip按鈕")
-        time.sleep(delay_time) # 根據電腦效能修改,建議為 1~2秒
-
-        return click_btns(retry_template, retry_confirm_template, skip_template) #進新的循環
-    else:
-        print("當前畫面已無額外的Skip按鈕，開始執行匹配判斷...")
-        return True # 返回True表示已經開始進入匹配判斷
+    return True
 
 def process_buttons_and_templates(iteration, retry_template, retry_confirm_template, skip_template, star_template, templates):
     """處理按鈕點擊和範例圖片匹配判斷"""
