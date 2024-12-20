@@ -30,8 +30,8 @@
 
 | 設定項目 | 說明 | 預設值 | 可選值 |
 |---------|------|--------|--------|
-| star_count | 需要的五星角色數量 | 3 | 任意正整數 |
-| target_count | 需要匹配的目標角色數量 | 1 | 任意正整數 |
+| star_count | 需要的五星角色數量, 設置為0時不判斷 | 3 | 任意正整數 |
+| target_count | 需要匹配的目標角色數量, 設置為0時不判斷 | 1 | 任意正整數 |
 | save_star_screenshot | 當達到五星數量條件時是否截圖 | false | true/false |
 | save_target_screenshot | 當達到目標角色數量條件時是否截圖 | true | true/false |
 | delay_time | 按鈕點擊之間的延遲時間 | 1.0 | 建議設置1.0 ~ 2.0秒 |
