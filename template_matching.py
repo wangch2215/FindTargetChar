@@ -152,7 +152,12 @@ def check_star_count(screenshot, template):
             if save_star_screenshot:
                 save_screenshot()
             return True
-    return False
+        else:
+            print(f"未找到足夠的5星角色，目前找到 {star_count} 個")
+            return False
+    else:
+        print("未找到任何5星角色")
+        return False
 
 def check_templates(screenshot, templates):
     match_count = 0
