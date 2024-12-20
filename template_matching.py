@@ -316,7 +316,8 @@ def main():
 
         template_count = get_template_count()
         if template_count == 0:
-            print("未找到任何範例圖片，無法執行。")
+            print("未找到任何範例圖片，強制將匹配數量設置為0")
+            target_match_count = 0
         else:
             print(f"範例圖片數量自動設定為: {template_count}")
 
