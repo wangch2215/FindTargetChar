@@ -209,9 +209,36 @@ def process_buttons_and_templates(iteration, retry_template, retry_confirm_templ
     global stop_script
     global delay_time
 
-    if not click_btns(retry_template, retry_confirm_template, skip_template):
-        print("按鈕點擊失敗，跳過本次判斷...")
+    # if not click_btns(retry_template, retry_confirm_template, skip_template):
+    #     print("按鈕點擊失敗，跳過本次判斷...")
+    #     return False
+
+    screenshot = capture_screenshot()
+    retry_points = btn_matching(screenshot, retry_template)
+    if not retry_points:
+        print("未找到Retry按鈕")
         return False
+    pyautogui.click(retry_points[0])
+    print("已點擊retry按鈕")
+    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
+
+    screenshot = capture_screenshot()
+    retry_confirm_points = btn_matching(screenshot, retry_confirm_template)
+    if not retry_confirm_points:
+        print("未找到Retry confirm按鈕")
+        return False
+    pyautogui.click(retry_confirm_points[0])
+    print("已點擊retry confirm按鈕")
+    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
+
+    screenshot = capture_screenshot()
+    skip_points = btn_matching(screenshot, skip_template)
+    if not skip_points:
+        print("未找到Skip按鈕")
+        return False
+    pyautogui.click(skip_points[0])
+    print("已點擊skip按鈕")
+    time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
 
     screenshot = capture_screenshot()
     # 判斷是否滿足星數條件
