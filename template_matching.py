@@ -258,7 +258,7 @@ def click_buttons( retry_template, retry_confirm_template, skip_template):
         if btn_name == "retry_confirm":
             pyautogui.click(points[0])
         print(f"已點擊{btn_name}按鈕")
-        time.sleep(0.1)  # 根據電腦效能修改,建議為 1~2秒
+        time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
 
 def process_buttons_and_templates(retry_template, retry_confirm_template, skip_template, star_template, templates):
     global stop_script
