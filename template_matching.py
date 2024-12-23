@@ -15,11 +15,11 @@ import ctypes
 stop_script = False
 start_script = False
 
-star_match_count = 3  # 預設值
-target_match_count = 1  # 預設值
+star_match_count = 2  # 預設值
+target_match_count = 2  # 預設值
 save_star_screenshot = True  # 預設值
-save_target_screenshot = False  # 預設值
-delay_time = 1.0 # 預設值
+save_target_screenshot = True  # 預設值
+delay_time = 1 # 預設值
 
 width = 3840
 
@@ -158,8 +158,9 @@ def check_star_count(screenshot, template):
     points = star_matching(screenshot, template)
     if points:
         star_count = len(points)
+        print(f"-------------------------------已找到 {star_count} 個5星角色")
         if star_count >= star_match_count:
-            print(f"已找到 {star_count} 個5星角色，已滿足條件({star_match_count}以上)")
+            print(f"已滿足條件({star_match_count}以上)")
             if save_star_screenshot:
                 save_screenshot()
             return True
@@ -167,7 +168,7 @@ def check_star_count(screenshot, template):
             print(f"未找到足夠的5星角色，目前找到 {star_count} 個")
             return False
     else:
-        print("未找到任何5星角色")
+        print("--------------------------------未找到任何5星角色")
         return False
 
 def check_templates(screenshot, templates):
@@ -223,7 +224,7 @@ def capture_screenshot(save_to_file=False):
     
     return screenshot
 
-# 為了向後相容，可以保留save_screenshot函數
+# 為了向後相容，保留save_screenshot函數
 def save_screenshot():
     capture_screenshot(save_to_file=True)
 
@@ -239,21 +240,39 @@ def click_buttons( retry_template, retry_confirm_template, skip_template):
     """
     global delay_time
     for btn, btn_name in [(retry_template, "retry"), (retry_confirm_template, "retry_confirm"), (skip_template, "skip")]:
-        screenshot = capture_screenshot()
-        points = btn_matching(screenshot, btn)
-        if not points:
-            print(f"未找到{btn_name}按鈕")
-            return False
+        find_flag = True
+        find_count = 0
+        while find_flag:                      
+            screenshot = capture_screenshot()
+            find_count += 1
+            points = btn_matching(screenshot, btn)
+            if points:
+                find_flag = False
+            else:
+                if btn_name == "skip" and find_count > 5:
+                    print(f"找不到{btn_name}按鈕，嘗試點擊 retry_confirm 按鈕")
+                    points2 = btn_matching(screenshot, retry_confirm_template)
+                    pyautogui.click(points2[0])
         pyautogui.click(points[0])
+        # 确认按钮有时会点击不上，多点一次
+        if btn_name == "retry_confirm":
+            pyautogui.click(points[0])
         print(f"已點擊{btn_name}按鈕")
-        time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
+        time.sleep(0.1)  # 根據電腦效能修改,建議為 1~2秒
 
 def process_buttons_and_templates(retry_template, retry_confirm_template, skip_template, star_template, templates):
     global stop_script
     global delay_time
 
     click_buttons(retry_template, retry_confirm_template, skip_template)
-
+    load_falg = True
+    while load_falg:
+        screenshot = capture_screenshot()
+        points = btn_matching(screenshot, retry_template)
+        if points:
+            load_falg = False
+            print(f"--------------------抽卡結果已加載完成")
+    
     screenshot = capture_screenshot()
     if check_star_count(screenshot, star_template):
         if check_templates(screenshot, templates):
@@ -332,7 +351,6 @@ def main():
         skip_template = load_image(f'{folder}/skip.png')
 
         star_template = load_image(f'{folder}/5star.png')
-
         templates = [load_image(f'templates/t{i + 1}.png') for i in range(template_count)]
         print("範例圖片載入完成，請於遊戲抽卡畫面按下 F9 開始運行腳本")
 
