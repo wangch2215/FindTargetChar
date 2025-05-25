@@ -254,9 +254,6 @@ def click_buttons( retry_template, retry_confirm_template, skip_template):
                     points2 = btn_matching(screenshot, retry_confirm_template)
                     pyautogui.click(points2[0])
         pyautogui.click(points[0])
-        # 确认按钮有时会点击不上，多点一次
-        if btn_name == "retry_confirm":
-            pyautogui.click(points[0])
         print(f"已點擊{btn_name}按鈕")
         time.sleep(delay_time)  # 根據電腦效能修改,建議為 1~2秒
 
